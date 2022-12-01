@@ -125,33 +125,35 @@ parser.read("mentorship.conf")
 aws_key = parser.get("AWSCREDENTIALS", "access_key")
 aws_secret_key = parser.get("AWSCREDENTIALS", "secret_access_key")
 
-print(aws_key)
-print(aws_secret_key)
-
+# Boto3 session for the AWS Wrangler
 session = boto3.Session(
     aws_access_key_id=aws_key,
     aws_secret_access_key=aws_secret_key,
     region_name='us-east-1'
 )
 
-# Testing code
-with open("28-11-2022.json", "r") as file:
-    data = json.load(file)
-
-# data = getAPIResponse()
-# with open("28-11-2022.json", "w") as file:
-#     file.write(json.dumps(data))
+data = getAPIResponse()
 
 s3_prefix_raw = 's3://projeto-de-mentoria/data/raw/'
 filename = '{}.json'.format(date.today())
 
-with open(filename, 'w') as file:
-    file.write(json.dumps(data))
+# S3 resource object
+s3 = boto3.resource(
+    's3',
+    region_name='us-east-1',
+    aws_access_key_id=aws_key,
+    aws_secret_access_key=aws_secret_key
+)
 
-wr.s3.upload(
-    local_file=filename,
-    path = s3_prefix_raw + filename,
-    boto3_session = session
+# Boto3 object for the raw API data
+s3object = s3.Object(
+    'projeto-de-mentoria',
+    s3_prefix_raw + filename
+)
+
+# Upload raw data to S3
+s3object.put(
+    Body=(bytes(json.dumps(data).encode('UTF-8')))
 )
 
 # flights list
@@ -163,6 +165,7 @@ df3 = getDestinationData(flights_data_response)
 df = pd.concat([df1, df2, df3], axis=1)
 
 s3_prefix_transformed = 's3://projeto-de-mentoria/data/transformed/'
+filename = '{}.csv'.format(date.today())
 wr.s3.to_csv(
     df=df,
     path=s3_prefix_transformed + filename,
