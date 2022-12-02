@@ -12,7 +12,7 @@ def getAPIResponse() -> dict:
     api_day_to_get = -2
     api_base_url = "https://api.flightapi.io/schedule/637ba984e277bdbf7ea82200?mode={}&day={}&iata={}"
     api_url = api_base_url.format(api_mode, api_day_to_get, api_airport_iata)
-    api_url = "https://api.flightapi.io/schedule/637ba984e277bdbf7ea82200?mode=departures&day=-2&iata=POA"
+    # api_url = "https://api.flightapi.io/schedule/637ba984e277bdbf7ea82200?mode=departures&day=-2&iata=POA"
     response = requests.get(api_url)
     data = response.json()
     return data
@@ -134,7 +134,7 @@ session = boto3.Session(
 
 data = getAPIResponse()
 
-s3_prefix_raw = 's3://projeto-de-mentoria/data/raw/'
+s3_prefix_raw = 'data/raw/'
 filename = '{}.json'.format(date.today())
 
 # S3 resource object
