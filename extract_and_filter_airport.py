@@ -9,7 +9,7 @@ from datetime import date
 def getAPIResponse() -> dict:
     api_mode = "departures"
     api_airport_iata = "POA"
-    api_day_to_get = -2
+    api_day_to_get = -1
     api_base_url = "https://api.flightapi.io/schedule/637ba984e277bdbf7ea82200?mode={}&day={}&iata={}"
     api_url = api_base_url.format(api_mode, api_day_to_get, api_airport_iata)
     # api_url = "https://api.flightapi.io/schedule/637ba984e277bdbf7ea82200?mode=departures&day=-2&iata=POA"
@@ -134,7 +134,7 @@ session = boto3.Session(
 
 data = getAPIResponse()
 
-s3_prefix_raw = 'data/raw/'
+s3_prefix_raw = 'data/raw/airport/'
 filename = '{}.json'.format(date.today())
 
 # S3 resource object
@@ -164,7 +164,7 @@ df2 = getTimeData(flights_data_response)
 df3 = getDestinationData(flights_data_response)
 df = pd.concat([df1, df2, df3], axis=1)
 
-s3_prefix_transformed = 's3://projeto-de-mentoria/data/transformed/'
+s3_prefix_transformed = 's3://projeto-de-mentoria/data/transformed/airport/'
 filename = '{}.csv'.format(date.today())
 wr.s3.to_csv(
     df=df,
