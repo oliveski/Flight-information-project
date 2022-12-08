@@ -20,37 +20,37 @@ def getAPIResponse() -> dict:
 def getIdentificationData(flights_data: list) -> pd.DataFrame:
     number_default_data = [
         i['flight']['identification']['number']['default']
-        for i in flights_data_response
+        for i in flights_data
         ] 
 
     number_alternative_data = [
         i['flight']['identification']['number']['alternative']
-        for i in flights_data_response
+        for i in flights_data
         ]
 
     model_data = [
         i['flight']['aircraft']['model']['text']
-        for i in flights_data_response
+        for i in flights_data
     ]
 
     registration_data = [
         i['flight']['aircraft']['registration']
-        for i in flights_data_response
+        for i in flights_data
     ]
 
     airline_name_data = [
         i['flight']['airline']['name']
-        for i in flights_data_response
+        for i in flights_data
     ]
 
     airline_code_data_iata = [
         i['flight']['airline']['code']['iata']
-        for i in flights_data_response
+        for i in flights_data
     ]
 
     airline_code_data_icao = [
         i['flight']['airline']['code']['icao']
-        for i in flights_data_response
+        for i in flights_data
     ]
 
     id_data = {

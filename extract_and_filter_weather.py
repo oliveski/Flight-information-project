@@ -4,7 +4,9 @@ import requests
 import configparser
 import pandas as pd
 import awswrangler as wr
-from datetime import date
+#from datetime import date
+import datetime
+import pytz
 
 def getAPIresponse(time: str):
     api_user = "poatek_giongo"
@@ -19,9 +21,14 @@ def getAPIresponse(time: str):
         api_required,
         api_coordinates
     )
-    api_url = "https://poatek_giongo:mg973XWfQU@api.meteomatics.com/2022-12-03T16:34:00.000-03:00/t_2m:C,visibility:m,is_fog_30min:idx,is_rain_30min:idx/-30.0324999,-51.2303767/csv?model=mix"
     response = requests.get(api_url)
-    return response
+    #Aqui ele testa se a API funcionou. Se não funcionar, irá retornar os valores zerados (não sei se é a melhor escolha)
+    if str(response)[-5:-2] == "200":
+      return response.text
+    else:
+      print(response)
+      return "\n0;0;0;0;0\n"
+ #   api_url = "https://poatek_giongo:mg973XWfQU@api.meteomatics.com/2022-12-03T16:34:00.000-03:00/t_2m:C,visibility:m,is_fog_30min:idx,is_rain_30min:idx/-30.0324999,-51.2303767/csv?model=mix"
 
 def getResponseData(response_str: str) -> list:
     response_lines = response_str.split('\n')
@@ -33,6 +40,31 @@ def getResponseData(response_str: str) -> list:
     is_rain = response_data[4]
     return_list = [date, t_2m, visibility, is_fog, is_rain]
     return return_list
+
+#Essa função deve retornar um dataframe com os dados do clima (só funciona se o argumento tiver dados das últimas 24 horas)  
+def getWeatherDF(df):
+  df_weather = pd.DataFrame(columns=['date', 't_2m', 'visibility', 'is_fog', 'is_rain'])
+  depTime = [0]
+  depTime.extend(df['scheduled_departure_time'].to_list())
+  sumTime = 0
+  for i in range(len(depTime) - 1):
+    timeDifference = depTime[i + 1] - depTime[i] + sumTime
+    newTimestamp = datetime.datetime.fromtimestamp(depTime[i], tz=pytz.timezone('Brazil/East')).strftime('%Y-%m-%dT%H:%M:%S.000-03:00')
+    if timeDifference >= 1800:
+      newImput = getResponseData(getAPIresponse(newTimestamp))
+      print("request:", i, "timestamp:", newTimestamp, "newImput:", newImput)
+      df_weather.loc[len(df_weather)] = newImput
+      sumTime = 0
+    else:
+      sumTime = sumTime + timeDifference
+      df_weather.loc[len(df_weather)] = newImput
+  return df_weather
+
+
+# if lasthorario - horario[dessevoo] > 30min:
+#   callweather()
+#   lasthorario = horario[dessevoo]
+
 
 parser = configparser.ConfigParser()
 parser.read("mentorship.conf")
@@ -54,7 +86,8 @@ s3 = boto3.resource(
     aws_secret_access_key=aws_secret_key
 )
 
-today = date.today()
+today = datetime.datetime.now(pytz.timezone('Brazil/East')).strftime("%Y-%m-%d")
+
 airport_data_object = s3.Object(
     'projeto-de-mentoria',
     'data/transformed/airport/' + f'{today}.csv'
@@ -64,16 +97,16 @@ df = pd.read_csv(airport_data_object.get()["Body"])
 # df = pd.read_csv("../s3_object_get_test.csv")
 df = df.sort_values(by="scheduled_departure_time")
 
-# print(df.head())
-# df.to_csv("s3_object_get_test.csv", index=False)
+#Essa função deve retornar um df com o mesmo número de linhas que o df do Schedule
+dfWeather = getWeatherDF(df)
+s3_prefix_transformed = 's3://projeto-de-mentoria/data/transformed/weather/'
+filename = '{}.csv'.format(datetime.date.today())
+wr.s3.to_csv(
+    df=dfWeather,
+    path=s3_prefix_transformed + filename,
+    index=False,
+    boto3_session=session
+)
 
 
-# last_checked_time = 0
-# weather_conditions = []
-# for index,row in df.iterrows():
-#     print(index, row['scheduled_departure_time'])
-
-response = getAPIresponse("")
-print(response.text)
-# print()
-# print(getResponseData(response.text))
+#Acho que o próximo passo seria juntar os dois df e fazer o upload

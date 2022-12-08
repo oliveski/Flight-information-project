@@ -2,3 +2,5 @@ boto3
 configparser
 awswrangler
 pandas
+psychopg2
+sqlalchemy
