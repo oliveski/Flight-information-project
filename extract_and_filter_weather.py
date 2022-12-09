@@ -91,6 +91,9 @@ df = df.sort_values(by="scheduled_departure_time")
 
 #Essa função deve retornar um df com o mesmo número de linhas que o df do Schedule
 dfWeather = getWeatherDF(df)
+
+dfWeather = pd.concat([df, dfWeather], axis=1)
+
 s3_prefix_transformed = 's3://projeto-de-mentoria/data/transformed/weather/'
 filename = '{}.csv'.format(datetime.date.today())
 wr.s3.to_csv(
