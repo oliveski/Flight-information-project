@@ -45,7 +45,7 @@ def getResponseData(response_str: str) -> list:
 def getWeatherDF(df):
   df_weather = pd.DataFrame(columns=['date', 't_2m', 'visibility', 'is_fog', 'is_rain'])
   lastCall = 0
-  detTime = df['scheduled_departure_time'].to_list()
+  depTime = df['scheduled_departure_time'].to_list()
   for i in range(len(depTime)):
     if depTime[i] - lastCall > 1800:
       newTimestamp = datetime.datetime.fromtimestamp(depTime[i], tz=pytz.timezone('Brazil/East')).strftime('%Y-%m-%dT%H:%M:%S.000-03:00')
