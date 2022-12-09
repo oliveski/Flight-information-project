@@ -99,5 +99,3 @@ wr.s3.to_csv(
     index=False,
     boto3_session=session
 )
-
-print("test")
