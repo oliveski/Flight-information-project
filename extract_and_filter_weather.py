@@ -44,27 +44,19 @@ def getResponseData(response_str: str) -> list:
 #Essa função deve retornar um dataframe com os dados do clima (só funciona se o argumento tiver dados das últimas 24 horas)  
 def getWeatherDF(df):
   df_weather = pd.DataFrame(columns=['date', 't_2m', 'visibility', 'is_fog', 'is_rain'])
-  depTime = [0]
-  depTime.extend(df['scheduled_departure_time'].to_list())
-  sumTime = 0
-  for i in range(len(depTime) - 1):
-    timeDifference = depTime[i + 1] - depTime[i] + sumTime
-    newTimestamp = datetime.datetime.fromtimestamp(depTime[i], tz=pytz.timezone('Brazil/East')).strftime('%Y-%m-%dT%H:%M:%S.000-03:00')
-    if timeDifference >= 1800:
+  lastCall = 0
+  depTime = df['scheduled_departure_time'].to_list()
+  for i in range(len(depTime)):
+    if depTime[i] - lastCall > 1800:
+      newTimestamp = datetime.datetime.fromtimestamp(depTime[i], tz=pytz.timezone('Brazil/East')).strftime('%Y-%m-%dT%H:%M:%S.000-03:00')
       newImput = getResponseData(getAPIresponse(newTimestamp))
-      print("request:", i, "timestamp:", newTimestamp, "newImput:", newImput)
+      print("Request number:", i, "Time of call:", newTimestamp, "Response:", newImput)
       df_weather.loc[len(df_weather)] = newImput
-      sumTime = 0
+      lastCall = depTime[i]
     else:
-      sumTime = sumTime + timeDifference
+      print("Request number:", i, "Time of call:", newTimestamp, "Response:", newImput)
       df_weather.loc[len(df_weather)] = newImput
-  return df_weather
-
-
-# if lasthorario - horario[dessevoo] > 30min:
-#   callweather()
-#   lasthorario = horario[dessevoo]
-
+      lastCall = depTime[i]
 
 parser = configparser.ConfigParser()
 parser.read("mentorship.conf")
@@ -108,5 +100,4 @@ wr.s3.to_csv(
     boto3_session=session
 )
 
-
-#Acho que o próximo passo seria juntar os dois df e fazer o upload
+print("test")
