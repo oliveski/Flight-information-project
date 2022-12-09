@@ -108,5 +108,6 @@ wr.s3.to_csv(
     boto3_session=session
 )
 
+print("Test")
 
 #Acho que o próximo passo seria juntar os dois df e fazer o upload
